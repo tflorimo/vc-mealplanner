@@ -1,13 +1,17 @@
 import { Router } from 'express';
-
-// Los routers de cada recurso se importarán aquí a medida que se implementen.
-// Por ahora solo exportamos el router raíz con un health check.
+import ingredientRoutes from './ingredientRoutes';
+import recipeRoutes     from './recipeRoutes';
+import mealSlotRoutes   from './mealSlotRoutes';
 
 const router = Router();
 
-// Health check para verificar que el servidor y la DB están online
+// Health check
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+router.use('/ingredients', ingredientRoutes);
+router.use('/recipes',     recipeRoutes);
+router.use('/meal-slots',  mealSlotRoutes);
 
 export default router;
