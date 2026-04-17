@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { SlotType } from '../models/MealSlot';
+import { CreateMealEventInput } from '../models/MealEvent';
 import { useCalendar } from '../hooks/useCalendar';
 import { useRecipes } from '../hooks/useRecipes';
+import { useMealEvents } from '../hooks/useMealEvents';
 import { mealSlotApi } from '../services/mealSlotApi';
+import { mealEventApi } from '../services/mealEventApi';
 import MonthlyCalendar from '../components/calendar/MonthlyCalendar';
 import SlotModal from '../components/calendar/SlotModal';
 
@@ -14,13 +17,13 @@ export default function CalendarPage() {
     refresh,
   } = useCalendar();
 
-  const { recipes } = useRecipes();
+  const { recipes }         = useRecipes();
+  const { events, refetch: refetchEvents } = useMealEvents();
 
-  const [modalDate, setModalDate]   = useState<string | null>(null);
-  const [modalSlot, setModalSlot]   = useState<SlotType | null>(null);
-  const [updatingSlots, setUpdatingSlots] = useState<Set<string>>(new Set());
+  const [modalDate, setModalDate]           = useState<string | null>(null);
+  const [modalSlot, setModalSlot]           = useState<SlotType | null>(null);
+  const [updatingSlots, setUpdatingSlots]   = useState<Set<string>>(new Set());
 
-  // Helpers para marcar qué slots están en vuelo
   const markUpdating = (key: string) =>
     setUpdatingSlots((prev) => new Set(prev).add(key));
 
@@ -49,6 +52,19 @@ export default function CalendarPage() {
     if (!modalDate || !modalSlot) return;
     await mealSlotApi.upsert(modalDate, modalSlot, { recipe_id: recipeId, is_fasting: false });
     await refresh();
+  };
+
+  const handleAssignEvent = async (eventId: number) => {
+    if (!modalDate || !modalSlot) return;
+    await mealSlotApi.upsert(modalDate, modalSlot, { meal_event_id: eventId, is_fasting: false });
+    await refresh();
+  };
+
+  const handleCreateAndAssignEvent = async (data: CreateMealEventInput) => {
+    if (!modalDate || !modalSlot) return;
+    const created = await mealEventApi.create(data);
+    await mealSlotApi.upsert(modalDate, modalSlot, { meal_event_id: created.id, is_fasting: false });
+    await Promise.all([refresh(), refetchEvents()]);
   };
 
   const handleClearSlot = async () => {
@@ -92,8 +108,11 @@ export default function CalendarPage() {
         slotType={modalSlot}
         currentSlot={currentSlot}
         recipes={recipes}
+        events={events}
         onClose={handleCloseModal}
         onAssignRecipe={handleAssignRecipe}
+        onAssignEvent={handleAssignEvent}
+        onCreateAndAssignEvent={handleCreateAndAssignEvent}
         onClear={handleClearSlot}
       />
     </>
