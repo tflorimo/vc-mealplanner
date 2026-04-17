@@ -54,33 +54,48 @@ export default function MonthlyCalendar({
 
       {error && <ErrorBanner message={error} />}
 
-      {/* Encabezados de días */}
-      <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
-        {DAY_LABELS.map((label) => (
-          <div
-            key={label}
-            className="py-2 text-center text-xs font-medium text-gray-400 uppercase tracking-wide"
-          >
-            {label}
-          </div>
-        ))}
+      {/* ── Desktop: grilla 7 columnas ── */}
+      <div className="hidden sm:block">
+        <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
+          {DAY_LABELS.map((label) => (
+            <div
+              key={label}
+              className="py-2 text-center text-xs font-medium text-gray-400 uppercase tracking-wide"
+            >
+              {label}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7">
+          {weeks.map((week, wi) =>
+            week.map((date, di) => (
+              <DayCell
+                key={`${wi}-${di}`}
+                date={date}
+                isCurrentMonth={date.getMonth() + 1 === month}
+                slotMap={slotMap}
+                updatingSlots={updatingSlots}
+                onSlotClick={onSlotClick}
+                onFastingToggle={onFastingToggle}
+              />
+            )),
+          )}
+        </div>
       </div>
 
-      {/* Grilla de días */}
-      <div className="grid grid-cols-7">
-        {weeks.map((week, wi) =>
-          week.map((date, di) => (
-            <DayCell
-              key={`${wi}-${di}`}
-              date={date}
-              isCurrentMonth={date.getMonth() + 1 === month}
-              slotMap={slotMap}
-              updatingSlots={updatingSlots}
-              onSlotClick={onSlotClick}
-              onFastingToggle={onFastingToggle}
-            />
-          )),
-        )}
+      {/* ── Mobile: lista vertical (solo días del mes actual) ── */}
+      <div className="sm:hidden divide-y divide-gray-100">
+        {weeks.flat().filter(date => date.getMonth() + 1 === month).map((date) => (
+          <DayCell
+            key={date.toISOString()}
+            date={date}
+            isCurrentMonth={true}
+            slotMap={slotMap}
+            updatingSlots={updatingSlots}
+            onSlotClick={onSlotClick}
+            onFastingToggle={onFastingToggle}
+          />
+        ))}
       </div>
     </div>
   );
