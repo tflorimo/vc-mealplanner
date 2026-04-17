@@ -1,0 +1,71 @@
+services:
+
+  # ── MySQL ─────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: vc-mealplanner-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${DB_NAME:-vc_mealplanner}
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-rootpass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  # ── Backend (Node.js + TypeScript) ────────────────────────
+  backend:
+    build:
+      context: ./backend
+      target: development      # stage de desarrollo con ts-node-dev
+    container_name: vc-mealplanner-backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend/src:/app/src           # hot-reload del código fuente
+      - ./database:/database             # migraciones SQL accesibles desde el backend
+    environment:
+      NODE_ENV: development
+      DB_HOST: mysql                     # nombre del servicio en docker-compose
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-rootpass}
+      DB_NAME: ${DB_NAME:-vc_mealplanner}
+      PORT: 3001
+      FRONTEND_URL: http://localhost:5173
+      # Apunta al volume mount /database (ver runMigrations.ts)
+      MIGRATIONS_DIR: /database/migrations
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Frontend (React + Vite) ────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      target: development      # stage de desarrollo con Vite dev server
+    container_name: vc-mealplanner-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src          # hot-reload del código fuente
+      - ./frontend/public:/app/public    # assets públicos (manifest, sw.js, etc.)
+    environment:
+      NODE_ENV: development
+      # El proxy de Vite redirige /api → backend:3001 (nombre del servicio)
+      VITE_API_URL: http://backend:3001
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local

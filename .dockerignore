@@ -1,0 +1,12 @@
+# Root-level .dockerignore (aplica cuando el build context es el directorio raíz)
+**/node_modules
+**/.git
+**/.env
+**/.env.local
+**/dist
+**/coverage
+**/*.log
+CLAUDE.md
+REQUIREMENTS.md
+.telegram_creds
+.telegram_notify

@@ -1,0 +1,10 @@
+# Backend .dockerignore
+# El build context es ./backend, así que los paths son relativos a esa carpeta.
+
+node_modules
+dist
+coverage
+*.log
+.env
+.env.local
+tests
