@@ -41,6 +41,12 @@ export async function create(
   userId: number,
   data: CreateRecipeInput,
 ): Promise<RecipeWithIngredients> {
+  // Detectar ingredient_ids duplicados antes de intentar el INSERT
+  const ids = data.ingredients.map(i => i.ingredient_id);
+  if (new Set(ids).size !== ids.length) {
+    throw new AppError(400, 'Un ingrediente no puede aparecer dos veces en la misma receta.');
+  }
+
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();

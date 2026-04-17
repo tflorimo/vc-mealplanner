@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as recipeService from '../services/recipeService';
 import { DEFAULT_USER_ID } from '../config/constants';
 
-export async function list(req: Request, res: Response): Promise<void> {
+export async function list(_req: Request, res: Response): Promise<void> {
   const recipes = await recipeService.getAll(DEFAULT_USER_ID);
   res.json(recipes);
 }

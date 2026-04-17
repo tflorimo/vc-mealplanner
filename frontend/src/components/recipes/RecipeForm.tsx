@@ -30,6 +30,36 @@ export default function RecipeForm({ initialData, onSubmit, onCancel, isSubmitti
   );
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  const UNIT_GROUP: Record<string, string> = {
+    kg: 'masa', g: 'masa', L: 'volumen', ml: 'volumen', u: 'pieza',
+  };
+
+  // Detecta el mismo ingrediente con unidades de grupos distintos dentro de la receta
+  const unitWarnings: string[] = (() => {
+    const seen = new Map<number, string>();
+    const warnings: string[] = [];
+    for (const row of rows) {
+      if (!row.ingredient) continue;
+      const id = row.ingredient.id;
+      const group = UNIT_GROUP[row.unit] ?? row.unit;
+      if (seen.has(id)) {
+        const prevGroup = seen.get(id)!;
+        if (prevGroup !== group) {
+          warnings.push(
+            `"${row.ingredient.name}" tiene unidades incompatibles (${prevGroup} y ${group}) — no se puede guardar.`,
+          );
+        } else {
+          warnings.push(
+            `"${row.ingredient.name}" aparece dos veces con unidades compatibles — se sumarán al calcular compras.`,
+          );
+        }
+      } else {
+        seen.set(id, group);
+      }
+    }
+    return warnings;
+  })();
+
   const addRow = () => setRows((prev) => [...prev, emptyRow()]);
 
   const updateRow = (index: number, updated: RowState) => {
@@ -50,6 +80,12 @@ export default function RecipeForm({ initialData, onSubmit, onCancel, isSubmitti
 
     if (ingredients.length === 0) {
       setValidationError('La receta debe tener al menos un ingrediente completo.');
+      return;
+    }
+
+    const incompatible = unitWarnings.some(w => w.includes('incompatibles'));
+    if (incompatible) {
+      setValidationError('Corregí las unidades incompatibles antes de guardar.');
       return;
     }
 
@@ -126,6 +162,24 @@ export default function RecipeForm({ initialData, onSubmit, onCancel, isSubmitti
         >
           + Agregar ingrediente
         </button>
+
+        {/* Advertencias de unidades */}
+        {unitWarnings.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {unitWarnings.map((w, i) => (
+              <div
+                key={i}
+                className={`text-xs px-3 py-2 rounded-md ${
+                  w.includes('incompatibles')
+                    ? 'bg-red-50 text-red-700 border border-red-200'
+                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                }`}
+              >
+                {w}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Acciones */}

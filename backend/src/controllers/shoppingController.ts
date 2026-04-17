@@ -19,7 +19,7 @@ export async function calculate(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function getLists(req: Request, res: Response): Promise<void> {
+export async function getLists(_req: Request, res: Response): Promise<void> {
   const lists = await shoppingService.getSavedLists(DEFAULT_USER_ID);
   res.json(lists);
 }
