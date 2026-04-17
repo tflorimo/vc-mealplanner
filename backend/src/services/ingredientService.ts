@@ -6,7 +6,7 @@ import { AUTOCOMPLETE_LIMIT } from '../config/constants';
 
 // MySQL2 devuelve TINYINT(1) como número. Normalizamos a boolean.
 function normalize(row: RowDataPacket): Ingredient {
-  return { ...row, is_pantry: row['is_pantry'] === 1 } as Ingredient;
+  return { ...row, is_pantry: Boolean(row['is_pantry']) } as Ingredient;
 }
 
 export async function searchByPrefix(

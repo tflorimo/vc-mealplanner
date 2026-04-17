@@ -8,7 +8,7 @@ import { getMonthRange } from '../utils/dateHelpers';
 function normalizeSlot(row: RowDataPacket): MealSlotWithDetails {
   return {
     ...row,
-    is_fasting:     row['is_fasting'] === 1,
+    is_fasting:     Boolean(row['is_fasting']),
     recipe_name:    row['recipe_name'] ?? null,
     event_name:     row['event_name'] ?? null,
   } as MealSlotWithDetails;
