@@ -9,7 +9,9 @@
 --   Recipe:   recipe_id IS NOT NULL, meal_event_id IS NULL, is_fasting = 0
 --   Event:    meal_event_id IS NOT NULL, recipe_id IS NULL, is_fasting = 0
 --
--- El CHECK constraint enforces la exclusión mutua a nivel DB.
+-- NOTA: MySQL 8.0 no permite usar en un CHECK constraint columnas que también
+-- tienen ON DELETE SET NULL en un FK (error 3818). La exclusión mutua se
+-- enforza en mealSlotService.ts (validación antes de cada upsert).
 
 CREATE TABLE IF NOT EXISTS meal_slots (
     id              INT UNSIGNED    NOT NULL AUTO_INCREMENT,
@@ -29,12 +31,6 @@ CREATE TABLE IF NOT EXISTS meal_slots (
     INDEX idx_slot_date_range (user_id, slot_date),
     INDEX idx_slot_recipe (recipe_id),
     INDEX idx_slot_event (meal_event_id),
-
-    -- Exclusión mutua: no puede tener receta Y evento, ni ayuno Y contenido
-    CONSTRAINT chk_slot_assignment CHECK (
-        (recipe_id IS NULL OR meal_event_id IS NULL)
-        AND NOT (is_fasting = 1 AND (recipe_id IS NOT NULL OR meal_event_id IS NOT NULL))
-    ),
 
     CONSTRAINT fk_slot_user   FOREIGN KEY (user_id)       REFERENCES users(id)       ON DELETE CASCADE,
     CONSTRAINT fk_slot_recipe FOREIGN KEY (recipe_id)     REFERENCES recipes(id)     ON DELETE SET NULL,

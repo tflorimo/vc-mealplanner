@@ -104,10 +104,8 @@ CREATE TABLE IF NOT EXISTS meal_slots (
     INDEX idx_slot_date_range (user_id, slot_date),
     INDEX idx_slot_recipe (recipe_id),
     INDEX idx_slot_event (meal_event_id),
-    CONSTRAINT chk_slot_assignment CHECK (
-        (recipe_id IS NULL OR meal_event_id IS NULL)
-        AND NOT (is_fasting = 1 AND (recipe_id IS NOT NULL OR meal_event_id IS NOT NULL))
-    ),
+    -- Exclusión mutua enforzada en mealSlotService.ts (MySQL 8.0 no permite
+    -- CHECK constraints sobre columnas con ON DELETE SET NULL en FK).
     CONSTRAINT fk_slot_user   FOREIGN KEY (user_id)       REFERENCES users(id)       ON DELETE CASCADE,
     CONSTRAINT fk_slot_recipe FOREIGN KEY (recipe_id)     REFERENCES recipes(id)     ON DELETE SET NULL,
     CONSTRAINT fk_slot_event  FOREIGN KEY (meal_event_id) REFERENCES meal_events(id) ON DELETE SET NULL
