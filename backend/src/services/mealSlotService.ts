@@ -8,6 +8,11 @@ import { getMonthRange } from '../utils/dateHelpers';
 function normalizeSlot(row: RowDataPacket): MealSlotWithDetails {
   return {
     ...row,
+    // mysql2 devuelve columnas DATE como objetos Date. Los convertimos a "YYYY-MM-DD"
+    // para que coincidan con las claves del slotMap en el frontend.
+    slot_date:      row['slot_date'] instanceof Date
+      ? row['slot_date'].toISOString().slice(0, 10)
+      : String(row['slot_date']).slice(0, 10),
     is_fasting:     Boolean(row['is_fasting']),
     recipe_name:    row['recipe_name'] ?? null,
     event_name:     row['event_name'] ?? null,
